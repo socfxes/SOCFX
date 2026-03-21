@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOCFX — ALEX Trading Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --green: #00FF87;
+    --green-dim: #00c96a;
+    --red: #FF4C4C;
+    --bg: #080808;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.07);
+    --text: #f0f0f0;
+    --muted: #666;
+    --font-mono: 'Space Mono', monospace;
+    --font: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* HEADER */
+  .header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .logo { font-family: var(--font-mono); font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--text); }
+  .logo span { color: var(--green); }
+  .divider { width: 1px; height: 28px; background: var(--border); }
+  .alex-badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 100px;
+  }
+  .pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+  .alex-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .alex-sub { font-size: 11px; color: var(--muted); margin-left: 4px; }
+
+  /* PAIRS */
+  .pairs {
+    display: flex; gap: 6px; padding: 10px 24px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    overflow-x: auto; flex-shrink: 0;
+  }
+  .pairs::-webkit-scrollbar { display: none; }
+  .pair {
+    padding: 5px 16px; border-radius: 100px; font-size: 12px;
+    font-family: var(--font-mono); font-weight: 700; letter-spacing: 1px;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--muted);
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .pair:hover { color: var(--text); border-color: rgba(255,255,255,0.2); }
+  .pair.active { background: var(--green); color: #000; border-color: var(--green); }
+
+  /* CHAT */
+  .chat { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+  .chat::-webkit-scrollbar { width: 4px; }
+  .chat::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 4px; }
+
+  .msg { display: flex; gap: 12px; animation: fadeUp 0.3s ease; }
+  .msg.user { flex-direction: row-reverse; }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  .avatar {
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  }
+  .avatar.alex { background: var(--green); color: #000; }
+  .avatar.user { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+  .bubble-wrap { max-width: 78%; display: flex; flex-direction: column; gap: 6px; }
+  .msg.user .bubble-wrap { align-items: flex-end; }
+
+  .bubble {
+    padding: 12px 16px; border-radius: 16px; font-size: 13.5px; line-height: 1.7;
+  }
+  .bubble.alex {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 4px 16px 16px 16px;
+  }
+  .bubble.user {
+    background: var(--green); color: #000; font-weight: 500;
+    border-radius: 16px 4px 16px 16px;
+  }
+
+  /* Analysis card inside bubble */
+  .analysis {
+    margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .a-row { display: flex; justify-content: space-between; font-size: 12px; }
+  .a-label { color: var(--muted); font-family: var(--font-mono); }
+  .a-val { font-weight: 500; }
+  .up { color: var(--green); }
+  .down { color: var(--red); }
+  .neutral { color: #EF9F27; }
+
+  .section-head {
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+    color: var(--green); margin: 8px 0 4px; text-transform: uppercase;
+  }
+
+  /* TYPING */
+  .typing-wrap { display: flex; gap: 12px; }
+  .typing { display: flex; align-items: center; gap: 5px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px 16px 16px 16px; }
+  .td { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: bounce 1.2s infinite; }
+  .td:nth-child(2) { animation-delay: 0.2s; }
+  .td:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-5px)} }
+
+  /* QUICK BTNS */
+  .quick-wrap { padding: 8px 24px 0; display: flex; gap: 6px; flex-wrap: wrap; }
+  .qbtn {
+    padding: 5px 14px; border-radius: 100px; font-size: 11px;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted); cursor: pointer; transition: all 0.15s;
+  }
+  .qbtn:hover { border-color: var(--green); color: var(--green); }
+
+  /* INPUT */
+  .input-area {
+    padding: 14px 24px; background: var(--surface);
+    border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center;
+    flex-shrink: 0;
+  }
+  #msg-input {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 100px; padding: 11px 20px; font-size: 13px;
+    color: var(--text); font-family: var(--font); outline: none;
+    transition: border 0.15s;
+  }
+  #msg-input:focus { border-color: rgba(0,255,135,0.4); }
+  #msg-input::placeholder { color: var(--muted); }
+  .send {
+    width: 40px; height: 40px; border-radius: 50%; background: var(--green);
+    border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .send:hover { background: var(--green-dim); transform: scale(1.05); }
+  .send svg { width: 16px; height: 16px; fill: #000; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">SOC<span>FX</span></div>
+  <div class="divider"></div>
+  <div class="alex-badge">
+    <div class="pulse"></div>
+    <div class="alex-name">ALEX</div>
+    <div class="alex-sub">Coach IA · En línea</div>
+  </div>
+</div>
+
+<div class="pairs">
+  <div class="pair active" onclick="setPair(this,'EUR/USD')">EUR/USD</div>
+  <div class="pair" onclick="setPair(this,'GBP/USD')">GBP/USD</div>
+  <div class="pair" onclick="setPair(this,'USD/JPY')">USD/JPY</div>
+  <div class="pair" onclick="setPair(this,'XAU/USD')">XAU/USD</div>
+  <div class="pair" onclick="setPair(this,'BTC/USD')">BTC/USD</div>
+  <div class="pair" onclick="setPair(this,'ETH/USD')">ETH/USD</div>
+  <div class="pair" onclick="setPair(this,'GBP/JPY')">GBP/JPY</div>
+  <div class="pair" onclick="setPair(this,'USD/CAD')">USD/CAD</div>
+</div>
+
+<div class="chat" id="chat">
+  <div class="msg">
+    <div class="avatar alex">A</div>
+    <div class="bubble-wrap">
+      <div class="bubble alex">
+        Hola, soy <strong>ALEX</strong> — tu coach de trading con IA de SOCFX.<br><br>
+        Analizo el mercado en tiempo real y te digo si <span class="up">SUBE</span> o <span class="down">BAJA</span> con datos actuales, análisis técnico y fundamental.<br><br>
+        Selecciona un par arriba y pregúntame lo que necesitas. 📊
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="quick-wrap">
+  <div class="qbtn" onclick="quick('¿Es buen momento para comprar EUR/USD ahora?')">¿Compro EUR/USD?</div>
+  <div class="qbtn" onclick="quick('Analiza XAU/USD oro ahora mismo')">Analiza el oro</div>
+  <div class="qbtn" onclick="quick('¿Cuál es el mejor par para operar hoy?')">Mejor par hoy</div>
+  <div class="qbtn" onclick="quick('¿Hay noticias económicas importantes hoy?')">Noticias hoy</div>
+  <div class="qbtn" onclick="quick('Bitcoin BTC/USD ¿sube o baja?')">¿BTC sube?</div>
+</div>
+
+<div class="input-area">
+  <input type="text" id="msg-input" placeholder="Pregunta a ALEX..." onkeydown="if(event.key==='Enter') send()" />
+  <button class="send" onclick="send()">
+    <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+  </button>
+</div>
+
+<script>
+let pair = 'EUR/USD';
+
+function setPair(el, p) {
+  document.querySelectorAll('.pair').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  pair = p;
+}
+
+function quick(text) {
+  document.getElementById('msg-input').value = text;
+  send();
+}
+
+function addMsg(role, html) {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.className = 'msg' + (role === 'user' ? ' user' : '');
+  div.innerHTML = `
+    <div class="avatar ${role === 'user' ? 'user' : 'alex'}">${role === 'user' ? 'TÚ' : 'A'}</div>
+    <div class="bubble-wrap">
+      <div class="bubble ${role === 'user' ? 'user' : 'alex'}">${html}</div>
+    </div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping() {
+  const chat = document.getElementById('chat');
+  const div = document.createElement('div');
+  div.id = 'typing';
+  div.className = 'typing-wrap';
+  div.innerHTML = `<div class="avatar alex">A</div><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function removeTyping() {
+  const t = document.getElementById('typing');
+  if (t) t.remove();
+}
+
+function formatResponse(text) {
+  return text
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/PREDICCIÓN:/g, '<div class="section-head">PREDICCIÓN</div>')
+    .replace(/ANÁLISIS TÉCNICO:/g, '<div class="section-head">ANÁLISIS TÉCNICO</div>')
+    .replace(/ANÁLISIS FUNDAMENTAL:/g, '<div class="section-head">ANÁLISIS FUNDAMENTAL</div>')
+    .replace(/SENTIMIENTO:/g, '<div class="section-head">SENTIMIENTO</div>')
+    .replace(/CONSEJO DE ALEX:/g, '<div class="section-head">CONSEJO DE ALEX</div>')
+    .replace(/PRECIO ACTUAL:/g, '<div class="section-head">PRECIO ACTUAL</div>')
+    .replace(/ZONA OBJETIVO:/g, '<div class="section-head">ZONA OBJETIVO</div>')
+    .replace(/STOP LOSS:/g, '<div class="section-head">STOP LOSS</div>')
+    .replace(/\b(SUBE|SUBIDA|ALCISTA|COMPRAR)\b/g, '<span class="up">$1</span>')
+    .replace(/\b(BAJA|BAJADA|BAJISTA|VENDER)\b/g, '<span class="down">$1</span>')
+    .replace(/(\d+)%/g, '<strong>$1%</strong>');
+}
+
+async function send() {
+  const input = document.getElementById('msg-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  addMsg('user', text);
+  showTyping();
+
+  const prompt = `Eres ALEX, coach de trading con IA de SOCFX. Par actual: ${pair}. Fecha actual: ${new Date().toLocaleDateString('es-PE', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}.
+
+Pregunta: "${text}"
+
+Responde en español con esta estructura exacta:
+
+PREDICCIÓN: [SUBE / BAJA / NEUTRAL] — [X]% probabilidad
+
+PRECIO ACTUAL:
+[precio actual aproximado de ${pair}]
+
+ZONA OBJETIVO:
+[nivel de precio objetivo si se cumple la predicción]
+
+STOP LOSS:
+[nivel recomendado de stop loss]
+
+ANÁLISIS TÉCNICO:
+[RSI actual estimado, tendencia, soporte y resistencia clave, medias móviles]
+
+ANÁLISIS FUNDAMENTAL:
+[Factores macro actuales, noticias recientes que impactan ${pair}, decisiones de bancos centrales relevantes]
+
+SENTIMIENTO:
+[Alcista / Bajista / Mixto — explica por qué en 2 líneas]
+
+CONSEJO DE ALEX:
+[Recomendación directa: comprar, vender o esperar. Ratio riesgo/beneficio. Máximo 1-2% del capital por operación.]
+
+Sé directo, preciso y profesional. Usa datos reales y actuales.`;
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: prompt })
+    });
+
+    const data = await res.json();
+    removeTyping();
+
+    if (data.error) {
+      addMsg('alex', `⚠️ Error: ${data.error}`);
+      return;
+    }
+
+    addMsg('alex', formatResponse(data.reply));
+  } catch (err) {
+    removeTyping();
+    addMsg('alex', `⚠️ Error de conexión: ${err.message}`);
+  }
+}
+</script>
+</body>
+</html>
